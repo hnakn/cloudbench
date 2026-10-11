@@ -1,10 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>CloudBench | Cloud Performance Dashboard</title>
+
   <style>
     :root {
       --bg: #0b1020;
@@ -19,7 +20,9 @@
       --yellow: #ffd166;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -45,7 +48,9 @@
       letter-spacing: -0.7px;
     }
 
-    .brand span { color: var(--blue); }
+    .brand span {
+      color: var(--blue);
+    }
 
     .subtitle {
       color: var(--muted);
@@ -68,8 +73,13 @@
       background: var(--yellow);
     }
 
-    .dot.online { background: var(--green); }
-    .dot.error { background: var(--red); }
+    .dot.online {
+      background: var(--green);
+    }
+
+    .dot.error {
+      background: var(--red);
+    }
 
     main {
       max-width: 1250px;
@@ -151,7 +161,9 @@
       margin-top: 12px;
     }
 
-    .section { margin-bottom: 35px; }
+    .section {
+      margin-bottom: 35px;
+    }
 
     .test-panel {
       background: linear-gradient(135deg, #15223b, #11192c);
@@ -188,6 +200,11 @@
       background: var(--blue);
     }
 
+    .azure-button {
+      color: #081122;
+      background: var(--green);
+    }
+
     .secondary {
       color: var(--text);
       background: #263650;
@@ -197,6 +214,20 @@
     .test-status {
       color: var(--muted);
       font-size: 13px;
+    }
+
+    .target-display {
+      margin-top: 18px;
+      padding: 13px 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.025);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .target-display strong {
+      color: var(--text);
     }
 
     .error-message {
@@ -223,8 +254,14 @@
       font-size: 13px;
     }
 
-    .info-row:last-child { border-bottom: 0; }
-    .info-row span:first-child { color: var(--muted); }
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .info-row span:first-child {
+      color: var(--muted);
+    }
+
     .info-row span:last-child {
       text-align: right;
       overflow-wrap: anywhere;
@@ -239,263 +276,1326 @@
     }
 
     @media (max-width: 760px) {
-      main { padding: 25px 4%; }
-      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .lower-grid { grid-template-columns: 1fr; }
-      header { padding: 22px 4%; }
+      main {
+        padding: 25px 4%;
+      }
+
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .lower-grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        padding: 22px 4%;
+      }
     }
 
     @media (max-width: 430px) {
-      .grid { grid-template-columns: 1fr; }
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
+
 <body>
+
+  <!-- ====================================================== -->
+  <!-- HEADER -->
+  <!-- ====================================================== -->
+
   <header>
     <div>
-      <div class="brand">Cloud<span>Bench</span></div>
-      <div class="subtitle">Cloud performance and scalability monitoring</div>
+      <div class="brand">
+        Cloud<span>Bench</span>
+      </div>
+
+      <div class="subtitle">
+        Cloud performance and scalability monitoring
+      </div>
     </div>
+
     <div class="status">
       <span id="apiDot" class="dot"></span>
-      <span id="apiStatus">Connecting to local API...</span>
+
+      <span id="apiStatus">
+        Connecting to local API...
+      </span>
     </div>
   </header>
 
+
+  <!-- ====================================================== -->
+  <!-- MAIN -->
+  <!-- ====================================================== -->
+
   <main>
-    <section class="section">
-      <div class="section-heading">
-        <div>
-          <h1>Performance Dashboard</h1>
-          <div class="muted">Live load-test measurements and AWS infrastructure metrics</div>
-        </div>
-        <div class="provider">AWS · ap-south-1 · Mumbai</div>
-      </div>
-    </section>
+
+    <!-- ==================================================== -->
+    <!-- DASHBOARD TITLE -->
+    <!-- ==================================================== -->
 
     <section class="section">
+
       <div class="section-heading">
+
         <div>
-          <h2>Load Test — k6</h2>
-          <div class="muted">Measurements collected by k6 while the test runs against the AWS load balancer.</div>
+
+          <h1>
+            Performance Dashboard
+          </h1>
+
+          <div class="muted">
+            Live load-test measurements and AWS + Azure
+            infrastructure metrics
+          </div>
+
         </div>
-        <div class="provider" id="k6Badge">Waiting for test</div>
+
+        <div
+          class="provider"
+          id="mainProvider"
+        >
+          Select AWS or Azure
+        </div>
+
       </div>
+
+    </section>
+
+
+    <!-- ==================================================== -->
+    <!-- K6 LOAD TEST -->
+    <!-- ==================================================== -->
+
+    <section class="section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <h2>
+            Load Test — k6
+          </h2>
+
+          <div class="muted">
+            Run the same workload against either AWS or Azure.
+          </div>
+
+        </div>
+
+        <div
+          class="provider"
+          id="k6Badge"
+        >
+          Waiting for test
+        </div>
+
+      </div>
+
 
       <div class="test-panel">
-        <h2>Load Test Controls</h2>
+
+        <h2>
+          Load Test Controls
+        </h2>
+
         <div class="muted">
-          Starts your existing loadtest.js configuration. The test ramps up to 15 virtual users and runs for approximately six minutes.
+          Both buttons use the same loadtest.js configuration:
+          5 → 10 → 15 virtual users over approximately six minutes.
         </div>
+
+
         <div class="test-controls">
-          <button class="primary" id="startButton" onclick="startTest()">Start k6 Test</button>
-          <span class="test-status" id="testStatus">No test running</span>
+
+          <button
+            class="primary"
+            id="awsButton"
+            onclick="startTest('aws')"
+          >
+            Run AWS Test
+          </button>
+
+
+          <button
+            class="azure-button"
+            id="azureButton"
+            onclick="startTest('azure')"
+          >
+            Run Azure Test
+          </button>
+
+
+          <span
+            class="test-status"
+            id="testStatus"
+          >
+            No test running
+          </span>
+
         </div>
-        <div class="error-message" id="k6Error"></div>
+
+
+        <div class="target-display">
+
+          Selected target:
+          <strong id="selectedTarget">
+            None
+          </strong>
+
+          <span id="targetDescription">
+            — choose AWS or Azure to start a test
+          </span>
+
+        </div>
+
+
+        <div
+          class="error-message"
+          id="k6Error"
+        ></div>
+
       </div>
 
+
+      <!-- ================================================== -->
+      <!-- K6 METRICS -->
+      <!-- ================================================== -->
+
       <div class="grid">
+
         <div class="card">
-          <div class="metric-label">Requests per second</div>
-          <div class="metric-value"><span id="rps">—</span></div>
-          <div class="metric-note">Recent 10-second window · requests/s</div>
+
+          <div class="metric-label">
+            Requests per second
+          </div>
+
+          <div class="metric-value">
+            <span id="rps">—</span>
+          </div>
+
+          <div class="metric-note">
+            k6 requests/s
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">p95 response time</div>
-          <div class="metric-value"><span id="p95">—</span> <span class="metric-unit">ms</span></div>
-          <div class="metric-note">95th percentile of recent request durations</div>
+
+          <div class="metric-label">
+            p95 response time
+          </div>
+
+          <div class="metric-value">
+
+            <span id="p95">—</span>
+
+            <span class="metric-unit">
+              ms
+            </span>
+
+          </div>
+
+          <div class="metric-note">
+            95th percentile of request durations
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">Failed requests</div>
-          <div class="metric-value"><span id="failureRate">—</span><span class="metric-unit">%</span></div>
-          <div class="metric-note">Recent request failure rate</div>
+
+          <div class="metric-label">
+            Failed requests
+          </div>
+
+          <div class="metric-value">
+
+            <span id="failureRate">—</span>
+
+            <span class="metric-unit">
+              %
+            </span>
+
+          </div>
+
+          <div class="metric-note">
+            k6 request failure rate
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">Virtual users</div>
-          <div class="metric-value" id="vus">—</div>
-          <div class="metric-note">Currently active k6 virtual users</div>
+
+          <div class="metric-label">
+            Virtual users
+          </div>
+
+          <div
+            class="metric-value"
+            id="vus"
+          >
+            —
+          </div>
+
+          <div class="metric-note">
+            Currently active k6 virtual users
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">Total requests</div>
-          <div class="metric-value" id="requests">—</div>
-          <div class="metric-note">Requests observed in the current output file</div>
+
+          <div class="metric-label">
+            Total requests
+          </div>
+
+          <div
+            class="metric-value"
+            id="requests"
+          >
+            —
+          </div>
+
+          <div class="metric-note">
+            Requests observed in the current k6 run
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">Test status</div>
-          <div class="metric-value" style="font-size:25px" id="testState">Idle</div>
-          <div class="metric-note">Refreshes automatically while the dashboard is open</div>
+
+          <div class="metric-label">
+            Test status
+          </div>
+
+          <div
+            class="metric-value"
+            style="font-size:25px"
+            id="testState"
+          >
+            Idle
+          </div>
+
+          <div class="metric-note">
+            Refreshes automatically while the dashboard is open
+          </div>
+
         </div>
+
       </div>
+
     </section>
+
+
+    <!-- ==================================================== -->
+    <!-- AWS INFRASTRUCTURE -->
+    <!-- ==================================================== -->
 
     <section class="section">
+
       <div class="section-heading">
+
         <div>
-          <h2>AWS Infrastructure</h2>
-          <div class="muted">CloudWatch CPU metrics and Auto Scaling Group capacity</div>
+
+          <h2>
+            AWS Infrastructure
+          </h2>
+
+          <div class="muted">
+            CloudWatch CPU metrics and Auto Scaling Group capacity
+          </div>
+
         </div>
-        <div class="provider">Auto-refresh · 30 seconds</div>
+
+        <div class="provider">
+          Auto-refresh · 1.5 seconds
+        </div>
+
       </div>
+
 
       <div class="grid">
+
         <div class="card">
-          <div class="metric-label">EC2 CPU utilization</div>
-          <div class="metric-value"><span id="cpu">—</span><span class="metric-unit">%</span></div>
-          <div class="metric-note" id="cpuNote">Waiting for CloudWatch data</div>
+
+          <div class="metric-label">
+            EC2 CPU utilization
+          </div>
+
+          <div class="metric-value">
+
+            <span id="cpu">
+              —
+            </span>
+
+            <span class="metric-unit">
+              %
+            </span>
+
+          </div>
+
+          <div
+            class="metric-note"
+            id="cpuNote"
+          >
+            Waiting for CloudWatch data
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">Running ASG instances</div>
-          <div class="metric-value" id="instances">—</div>
-          <div class="metric-note">Instances reported by the Auto Scaling Group</div>
+
+          <div class="metric-label">
+            Running ASG instances
+          </div>
+
+          <div
+            class="metric-value"
+            id="instances"
+          >
+            —
+          </div>
+
+          <div class="metric-note">
+            Instances reported by the Auto Scaling Group
+          </div>
+
         </div>
+
+
         <div class="card">
-          <div class="metric-label">Desired capacity</div>
-          <div class="metric-value" id="desired">—</div>
-          <div class="metric-note" id="capacityNote">Minimum: — · Maximum: —</div>
+
+          <div class="metric-label">
+            Desired capacity
+          </div>
+
+          <div
+            class="metric-value"
+            id="desired"
+          >
+            —
+          </div>
+
+          <div
+            class="metric-note"
+            id="capacityNote"
+          >
+            Minimum: — · Maximum: —
+          </div>
+
         </div>
+
       </div>
+
     </section>
+
+
+    <!-- ==================================================== -->
+    <!-- AZURE INFRASTRUCTURE -->
+    <!-- ==================================================== -->
+
+    <section class="section">
+
+      <div class="section-heading">
+
+        <div>
+
+          <h2>
+            Azure Infrastructure
+          </h2>
+
+          <div class="muted">
+            Azure Monitor CPU metrics and VM Scale Set capacity
+          </div>
+
+        </div>
+
+        <div class="provider">
+          Auto-refresh · 1.5 seconds
+        </div>
+
+      </div>
+
+
+      <div class="grid">
+
+        <div class="card">
+
+          <div class="metric-label">
+            VMSS CPU utilization
+          </div>
+
+          <div class="metric-value">
+
+            <span id="azureCpu">
+              —
+            </span>
+
+            <span class="metric-unit">
+              %
+            </span>
+
+          </div>
+
+          <div
+            class="metric-note"
+            id="azureCpuNote"
+          >
+            Waiting for Azure Monitor data
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="metric-label">
+            Running VMSS instances
+          </div>
+
+          <div
+            class="metric-value"
+            id="azureInstances"
+          >
+            —
+          </div>
+
+          <div class="metric-note">
+            Instances currently reported by the
+            Virtual Machine Scale Set
+          </div>
+
+        </div>
+
+
+        <div class="card">
+
+          <div class="metric-label">
+            Desired capacity
+          </div>
+
+          <div
+            class="metric-value"
+            id="azureDesired"
+          >
+            —
+          </div>
+
+          <div
+            class="metric-note"
+            id="azureCapacityNote"
+          >
+            Minimum: — · Maximum: —
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ==================================================== -->
+    <!-- ENVIRONMENT / FRESHNESS -->
+    <!-- ==================================================== -->
 
     <section class="lower-grid">
+
+      <!-- Environment -->
+
       <div class="card">
-        <h2>Environment</h2>
-        <div class="info-row"><span>Load generator</span><span>k6</span></div>
-        <div class="info-row"><span>Cloud provider</span><span>AWS</span></div>
-        <div class="info-row"><span>Region</span><span>ap-south-1</span></div>
-        <div class="info-row"><span>Test target</span><span>EC2 via ALB</span></div>
+
+        <h2>
+          Environment
+        </h2>
+
+
+        <div class="info-row">
+
+          <span>
+            Load generator
+          </span>
+
+          <span>
+            k6
+          </span>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <span>
+            AWS
+          </span>
+
+          <span>
+            ap-south-1 · EC2 via ALB
+          </span>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <span>
+            Azure
+          </span>
+
+          <span>
+            South India · VMSS via HTTPS
+          </span>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <span>
+            Azure endpoint
+          </span>
+
+          <span>
+            20.235.172.176
+          </span>
+
+        </div>
+
       </div>
+
+
+      <!-- Data freshness -->
+
       <div class="card">
-        <h2>Data freshness</h2>
-        <div class="info-row"><span>k6 metrics updated</span><span id="k6Updated">Not yet received</span></div>
-        <div class="info-row"><span>AWS metrics updated</span><span id="awsUpdated">Not yet received</span></div>
-        <div class="info-row"><span>Local API</span><span>localhost:3002</span></div>
+
+        <h2>
+          Data freshness
+        </h2>
+
+
+        <div class="info-row">
+
+          <span>
+            k6 metrics updated
+          </span>
+
+          <span id="k6Updated">
+            Not yet received
+          </span>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <span>
+            AWS metrics updated
+          </span>
+
+          <span id="awsUpdated">
+            Not yet received
+          </span>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <span>
+            Azure metrics updated
+          </span>
+
+          <span id="azureUpdated">
+            Not yet received
+          </span>
+
+        </div>
+
+
+        <div class="info-row">
+
+          <span>
+            Local API
+          </span>
+
+          <span>
+            localhost:3000
+          </span>
+
+        </div>
+
       </div>
+
     </section>
+
   </main>
 
-  <footer>CloudBench · Cloud performance benchmarking project</footer>
+
+  <!-- ====================================================== -->
+  <!-- FOOTER -->
+  <!-- ====================================================== -->
+
+  <footer>
+    CloudBench · Cloud performance benchmarking project
+  </footer>
+
+
+  <!-- ====================================================== -->
+  <!-- JAVASCRIPT -->
+  <!-- ====================================================== -->
 
   <script>
-    const API = "http://localhost:3002";
-    let startRequested = false;
 
-    const byId = (id) => document.getElementById(id);
+    // ========================================================
+    // API
+    // ========================================================
+
+    const API =
+      "http://localhost:3000";
+
+
+    let startRequested =
+      false;
+
+
+    // ========================================================
+    // Helpers
+    // ========================================================
+
+    const byId =
+      (id) =>
+        document.getElementById(id);
+
 
     function showK6Error(message) {
-      const box = byId("k6Error");
-      box.textContent = message;
-      box.style.display = "block";
+
+      const box =
+        byId("k6Error");
+
+      box.textContent =
+        message;
+
+      box.style.display =
+        "block";
     }
+
 
     function clearK6Error() {
-      byId("k6Error").textContent = "";
-      byId("k6Error").style.display = "none";
+
+      byId("k6Error").textContent =
+        "";
+
+      byId("k6Error").style.display =
+        "none";
     }
 
-    function setApiStatus(ok, text) {
-      byId("apiDot").className = "dot " + (ok ? "online" : "error");
-      byId("apiStatus").textContent = text;
+
+    function setApiStatus(
+      ok,
+      text
+    ) {
+
+      byId("apiDot").className =
+        "dot " +
+        (
+          ok
+            ? "online"
+            : "error"
+        );
+
+      byId("apiStatus").textContent =
+        text;
     }
 
-    async function startTest() {
-      if (startRequested) return;
-      startRequested = true;
+
+    function setTargetDisplay(
+      target
+    ) {
+
+      if (target === "aws") {
+
+        byId("selectedTarget").textContent =
+          "AWS";
+
+        byId("targetDescription").textContent =
+          " · ap-south-1 · EC2 via ALB";
+
+        byId("mainProvider").textContent =
+          "AWS · ap-south-1 · Mumbai";
+
+        return;
+      }
+
+
+      if (target === "azure") {
+
+        byId("selectedTarget").textContent =
+          "Azure";
+
+        byId("targetDescription").textContent =
+          " · South India · VMSS via HTTPS";
+
+        byId("mainProvider").textContent =
+          "Azure · South India · VMSS";
+
+        return;
+      }
+
+
+      byId("selectedTarget").textContent =
+        "None";
+
+      byId("targetDescription").textContent =
+        " — choose AWS or Azure to start a test";
+
+      byId("mainProvider").textContent =
+        "Select AWS or Azure";
+    }
+
+
+    function setButtonsDisabled(
+      disabled
+    ) {
+
+      byId("awsButton").disabled =
+        disabled;
+
+      byId("azureButton").disabled =
+        disabled;
+    }
+
+
+    // ========================================================
+    // START K6
+    // ========================================================
+
+    async function startTest(
+      target
+    ) {
+
+      if (startRequested) {
+        return;
+      }
+
+
+      startRequested =
+        true;
+
+
       clearK6Error();
-      byId("startButton").disabled = true;
-      byId("testStatus").textContent = "Starting k6...";
-      byId("testState").textContent = "Starting";
+
+      setTargetDisplay(
+        target
+      );
+
+
+      setButtonsDisabled(
+        true
+      );
+
+
+      byId("testStatus").textContent =
+        `Starting ${target.toUpperCase()} k6 test...`;
+
+
+      byId("testState").textContent =
+        "Starting";
+
+
+      byId("k6Badge").textContent =
+        `${target.toUpperCase()} starting`;
+
 
       try {
-        const response = await fetch(`${API}/api/k6/start`, { method: "POST" });
-        const data = await response.json();
 
-        if (!response.ok) throw new Error(data.error || "Could not start k6.");
+        const response =
+          await fetch(
+            `${API}/api/k6/start`,
+            {
+              method:
+                "POST",
 
-        byId("testStatus").textContent = "Test started";
-        byId("k6Badge").textContent = "Test started";
-        byId("testState").textContent = "Running";
-      
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body:
+                JSON.stringify({
+                  target:
+                    target,
+                }),
+            }
+          );
+
+
+        const data =
+          await response.json();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            data.error ||
+            "Could not start k6."
+          );
+        }
+
+
+        byId("testStatus").textContent =
+          `${target.toUpperCase()} test started`;
+
+
+        byId("k6Badge").textContent =
+          `${target.toUpperCase()} running`;
+
+
+        byId("testState").textContent =
+          "Running";
+
       } catch (error) {
-        showK6Error("Unable to start the test: " + error.message);
-        byId("testStatus").textContent = "Could not start test";
-        byId("testState").textContent = "Error";
+
+        showK6Error(
+          "Unable to start the test: " +
+          error.message
+        );
+
+
+        byId("testStatus").textContent =
+          "Could not start test";
+
+
+        byId("testState").textContent =
+          "Error";
+
+
+        setButtonsDisabled(
+          false
+        );
+
       } finally {
-        startRequested = false;
-        byId("startButton").disabled = false;
+
+        startRequested =
+          false;
       }
+
     }
 
-    
+
+    // ========================================================
+    // K6 METRICS
+    // ========================================================
 
     async function loadK6Metrics() {
-      try {
-        const response = await fetch(`${API}/api/k6/live`, { cache: "no-store" });
-        if (!response.ok) throw new Error("k6 endpoint returned HTTP " + response.status);
-        const data = await response.json();
 
-        byId("rps").textContent = Number(data.rps || 0).toFixed(2);
-        byId("p95").textContent = data.p95Ms == null ? "—" : Number(data.p95Ms).toFixed(1);
-        byId("failureRate").textContent = (Number(data.failureRate || 0) * 100).toFixed(2);
-        byId("vus").textContent = data.vus ?? 0;
-        byId("requests").textContent = data.requests ?? 0;
-        byId("k6Updated").textContent = new Date().toLocaleTimeString();
+      try {
+
+        const response =
+          await fetch(
+            `${API}/api/k6/live`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "k6 endpoint returned HTTP " +
+            response.status
+          );
+        }
+
+
+        const data =
+          await response.json();
+
+
+        // ----------------------------------------------------
+        // Metrics
+        // ----------------------------------------------------
+
+        byId("rps").textContent =
+          data.rps == null
+            ? "—"
+            : Number(
+                data.rps
+              ).toFixed(2);
+
+
+        byId("p95").textContent =
+          data.p95Ms == null
+            ? "—"
+            : Number(
+                data.p95Ms
+              ).toFixed(1);
+
+
+        byId("failureRate").textContent =
+          data.failureRate == null
+            ? "—"
+            : (
+                Number(
+                  data.failureRate
+                ) * 100
+              ).toFixed(2);
+
+
+        byId("vus").textContent =
+          data.vus ?? "—";
+
+
+        byId("requests").textContent =
+          data.requests ?? "—";
+
+
+        byId("k6Updated").textContent =
+          new Date().toLocaleTimeString();
+
+
+        // ----------------------------------------------------
+        // Target
+        // ----------------------------------------------------
+
+        if (data.target) {
+
+          setTargetDisplay(
+            data.target
+          );
+        }
+
+
+        // ----------------------------------------------------
+        // Running
+        // ----------------------------------------------------
 
         if (data.running) {
-          byId("testState").textContent = "Running";
-          byId("k6Badge").textContent = "Running";
-          byId("testStatus").textContent = "k6 test is running";
-          byId("startButton").disabled = true;
-        } else {
-          byId("startButton").disabled = false;
 
-          if (byId("testState").textContent === "Running" ||
-              byId("testState").textContent === "Starting") {
-            byId("testState").textContent = "Finished";
-            byId("k6Badge").textContent = "Finished";
-            byId("testStatus").textContent = "Test finished";
-          } else if (byId("testState").textContent === "Idle") {
-            byId("k6Badge").textContent = "Waiting for test";
+          byId("testState").textContent =
+            "Running";
+
+
+          byId("k6Badge").textContent =
+            `${(
+              data.target ||
+              "cloud"
+            ).toUpperCase()} running`;
+
+
+          byId("testStatus").textContent =
+            `${(
+              data.target ||
+              "Cloud"
+            ).toUpperCase()} k6 test is running`;
+
+
+          setButtonsDisabled(
+            true
+          );
+
+
+        } else {
+
+          setButtonsDisabled(
+            false
+          );
+
+
+          if (
+            data.target
+          ) {
+
+            byId("testState").textContent =
+              "Finished";
+
+
+            byId("k6Badge").textContent =
+              `${data.target.toUpperCase()} finished`;
+
+
+            byId("testStatus").textContent =
+              `${data.target.toUpperCase()} test finished`;
+
+          } else {
+
+            byId("testState").textContent =
+              "Idle";
+
+
+            byId("k6Badge").textContent =
+              "Waiting for test";
+
+
+            byId("testStatus").textContent =
+              "No test running";
           }
         }
 
-        setApiStatus(true, "Local API connected");
+
+        setApiStatus(
+          true,
+          "Local API connected"
+        );
+
+
       } catch (error) {
-        setApiStatus(false, "Local API unavailable");
-        byId("testStatus").textContent = "Start the local server on port 3002";
+
+        setApiStatus(
+          false,
+          "Local API unavailable"
+        );
+
+
+        byId("testStatus").textContent =
+          "Local API unavailable";
+
       }
+
     }
+
+
+    // ========================================================
+    // AWS METRICS
+    // ========================================================
 
     async function loadAwsMetrics() {
+
       try {
-        const response = await fetch(`${API}/api/metrics/aws`, { cache: "no-store" });
-        if (!response.ok) throw new Error("AWS endpoint returned HTTP " + response.status);
-        const data = await response.json();
+
+        const response =
+          await fetch(
+            `${API}/api/metrics/aws`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "AWS endpoint returned HTTP " +
+            response.status
+          );
+        }
+
+
+        const data =
+          await response.json();
+
 
         byId("cpu").textContent =
-          data.cpuUtilizationPercent == null
+          data.cpuUtilizationPercent ==
+          null
             ? "—"
-            : Number(data.cpuUtilizationPercent).toFixed(2);
+            : Number(
+                data.cpuUtilizationPercent
+              ).toFixed(2);
 
-        byId("instances").textContent = data.instanceCount ?? "—";
-        byId("desired").textContent = data.desiredCapacity ?? "—";
+
+        byId("instances").textContent =
+          data.instanceCount ??
+          "—";
+
+
+        byId("desired").textContent =
+          data.desiredCapacity ??
+          "—";
+
+
         byId("capacityNote").textContent =
-          `Minimum: ${data.minSize ?? "—"} · Maximum: ${data.maxSize ?? "—"}`;
+          `Minimum: ${
+            data.minSize ?? "—"
+          } · Maximum: ${
+            data.maxSize ?? "—"
+          }`;
 
-        byId("cpuNote").textContent = data.cpuMetricTimestamp
-          ? "CloudWatch sample: " + new Date(data.cpuMetricTimestamp).toLocaleTimeString()
-          : "No recent CPU datapoint available";
 
-        byId("awsUpdated").textContent = new Date().toLocaleTimeString();
+        byId("cpuNote").textContent =
+          data.cpuMetricTimestamp
+            ? "CloudWatch sample: " +
+              new Date(
+                data.cpuMetricTimestamp
+              ).toLocaleTimeString()
+            : "No recent CPU datapoint available";
+
+
+        byId("awsUpdated").textContent =
+          new Date().toLocaleTimeString();
+
+
       } catch (error) {
-        byId("cpuNote").textContent = "Could not load AWS metrics";
-        console.error("AWS metrics error:", error);
+
+        byId("cpuNote").textContent =
+          "Could not load AWS metrics";
+
+
+        console.error(
+          "AWS metrics error:",
+          error
+        );
+
       }
+
     }
 
+
+    // ========================================================
+    // AZURE METRICS
+    // ========================================================
+
+    async function loadAzureMetrics() {
+
+      try {
+
+        const response =
+          await fetch(
+            `${API}/api/metrics/azure`,
+            {
+              cache:
+                "no-store",
+            }
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            "Azure endpoint returned HTTP " +
+            response.status
+          );
+        }
+
+
+        const data =
+          await response.json();
+
+
+        // ----------------------------------------------------
+        // CPU
+        // ----------------------------------------------------
+
+        byId("azureCpu").textContent =
+          data.cpuUtilizationPercent ==
+          null
+            ? "—"
+            : Number(
+                data.cpuUtilizationPercent
+              ).toFixed(2);
+
+
+        // ----------------------------------------------------
+        // Instances
+        // ----------------------------------------------------
+
+        byId("azureInstances").textContent =
+          data.instanceCount ??
+          "—";
+
+
+        // ----------------------------------------------------
+        // Desired capacity
+        // ----------------------------------------------------
+
+        byId("azureDesired").textContent =
+          data.desiredCapacity ??
+          "—";
+
+
+        // ----------------------------------------------------
+        // Capacity range
+        // ----------------------------------------------------
+
+        byId("azureCapacityNote").textContent =
+          `Minimum: ${
+            data.minSize ?? "—"
+          } · Maximum: ${
+            data.maxSize ?? "—"
+          }`;
+
+
+        // ----------------------------------------------------
+        // CPU timestamp
+        // ----------------------------------------------------
+
+        byId("azureCpuNote").textContent =
+          data.cpuMetricTimestamp
+            ? "Azure Monitor sample: " +
+              new Date(
+                data.cpuMetricTimestamp
+              ).toLocaleTimeString()
+            : "No recent CPU datapoint available";
+
+
+        // ----------------------------------------------------
+        // Freshness
+        // ----------------------------------------------------
+
+        byId("azureUpdated").textContent =
+          new Date().toLocaleTimeString();
+
+
+      } catch (error) {
+
+        byId("azureCpuNote").textContent =
+          "Could not load Azure metrics";
+
+
+        console.error(
+          "Azure metrics error:",
+          error
+        );
+
+      }
+
+    }
+
+
+    // ========================================================
+    // INITIAL LOAD
+    // ========================================================
+
     loadK6Metrics();
+
     loadAwsMetrics();
-    setInterval(loadK6Metrics, 1500);
-    setInterval(loadAwsMetrics, 1500);
+
+    loadAzureMetrics();
+
+
+    // ========================================================
+    // AUTO REFRESH
+    // ========================================================
+
+    setInterval(
+      loadK6Metrics,
+      1500
+    );
+
+
+    setInterval(
+      loadAwsMetrics,
+      1500
+    );
+
+
+    setInterval(
+      loadAzureMetrics,
+      1500
+    );
+
   </script>
+
 </body>
 </html>
