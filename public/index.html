@@ -1,0 +1,501 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudBench | Cloud Performance Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a2e;
+      --panel2: #17223a;
+      --border: #283650;
+      --text: #edf3ff;
+      --muted: #98a9c5;
+      --blue: #6d9eff;
+      --green: #42d6a4;
+      --red: #ff7185;
+      --yellow: #ffd166;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      padding: 25px 5%;
+      border-bottom: 1px solid var(--border);
+      background: #0e1527;
+    }
+
+    .brand {
+      font-size: 25px;
+      font-weight: 750;
+      letter-spacing: -0.7px;
+    }
+
+    .brand span { color: var(--blue); }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 5px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .dot.online { background: var(--green); }
+    .dot.error { background: var(--red); }
+
+    main {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 32px 5%;
+    }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin: 0 0 7px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 0 0 5px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .provider {
+      font-size: 12px;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 35px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      min-width: 0;
+    }
+
+    .metric-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .metric-value {
+      font-size: clamp(27px, 3vw, 35px);
+      font-weight: 750;
+      letter-spacing: -1px;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-unit {
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .metric-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+
+    .section { margin-bottom: 35px; }
+
+    .test-panel {
+      background: linear-gradient(135deg, #15223b, #11192c);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 18px;
+    }
+
+    .test-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 19px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .primary {
+      color: #081122;
+      background: var(--blue);
+    }
+
+    .secondary {
+      color: var(--text);
+      background: #263650;
+      border: 1px solid #3a4d6b;
+    }
+
+    .test-status {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .error-message {
+      display: none;
+      color: var(--red);
+      font-size: 13px;
+      margin-top: 14px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .lower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .info-row:last-child { border-bottom: 0; }
+    .info-row span:first-child { color: var(--muted); }
+    .info-row span:last-child {
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      padding: 22px 5%;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 25px 4%; }
+      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .lower-grid { grid-template-columns: 1fr; }
+      header { padding: 22px 4%; }
+    }
+
+    @media (max-width: 430px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="brand">Cloud<span>Bench</span></div>
+      <div class="subtitle">Cloud performance and scalability monitoring</div>
+    </div>
+    <div class="status">
+      <span id="apiDot" class="dot"></span>
+      <span id="apiStatus">Connecting to local API...</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h1>Performance Dashboard</h1>
+          <div class="muted">Live load-test measurements and AWS infrastructure metrics</div>
+        </div>
+        <div class="provider">AWS · ap-south-1 · Mumbai</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>Load Test — k6</h2>
+          <div class="muted">Measurements collected by k6 while the test runs against the AWS load balancer.</div>
+        </div>
+        <div class="provider" id="k6Badge">Waiting for test</div>
+      </div>
+
+      <div class="test-panel">
+        <h2>Load Test Controls</h2>
+        <div class="muted">
+          Starts your existing loadtest.js configuration. The test ramps up to 15 virtual users and runs for approximately six minutes.
+        </div>
+        <div class="test-controls">
+          <button class="primary" id="startButton" onclick="startTest()">Start k6 Test</button>
+          <span class="test-status" id="testStatus">No test running</span>
+        </div>
+        <div class="error-message" id="k6Error"></div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="metric-label">Requests per second</div>
+          <div class="metric-value"><span id="rps">—</span></div>
+          <div class="metric-note">Recent 10-second window · requests/s</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">p95 response time</div>
+          <div class="metric-value"><span id="p95">—</span> <span class="metric-unit">ms</span></div>
+          <div class="metric-note">95th percentile of recent request durations</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Failed requests</div>
+          <div class="metric-value"><span id="failureRate">—</span><span class="metric-unit">%</span></div>
+          <div class="metric-note">Recent request failure rate</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Virtual users</div>
+          <div class="metric-value" id="vus">—</div>
+          <div class="metric-note">Currently active k6 virtual users</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Total requests</div>
+          <div class="metric-value" id="requests">—</div>
+          <div class="metric-note">Requests observed in the current output file</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Test status</div>
+          <div class="metric-value" style="font-size:25px" id="testState">Idle</div>
+          <div class="metric-note">Refreshes automatically while the dashboard is open</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <h2>AWS Infrastructure</h2>
+          <div class="muted">CloudWatch CPU metrics and Auto Scaling Group capacity</div>
+        </div>
+        <div class="provider">Auto-refresh · 30 seconds</div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="metric-label">EC2 CPU utilization</div>
+          <div class="metric-value"><span id="cpu">—</span><span class="metric-unit">%</span></div>
+          <div class="metric-note" id="cpuNote">Waiting for CloudWatch data</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Running ASG instances</div>
+          <div class="metric-value" id="instances">—</div>
+          <div class="metric-note">Instances reported by the Auto Scaling Group</div>
+        </div>
+        <div class="card">
+          <div class="metric-label">Desired capacity</div>
+          <div class="metric-value" id="desired">—</div>
+          <div class="metric-note" id="capacityNote">Minimum: — · Maximum: —</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lower-grid">
+      <div class="card">
+        <h2>Environment</h2>
+        <div class="info-row"><span>Load generator</span><span>k6</span></div>
+        <div class="info-row"><span>Cloud provider</span><span>AWS</span></div>
+        <div class="info-row"><span>Region</span><span>ap-south-1</span></div>
+        <div class="info-row"><span>Test target</span><span>EC2 via ALB</span></div>
+      </div>
+      <div class="card">
+        <h2>Data freshness</h2>
+        <div class="info-row"><span>k6 metrics updated</span><span id="k6Updated">Not yet received</span></div>
+        <div class="info-row"><span>AWS metrics updated</span><span id="awsUpdated">Not yet received</span></div>
+        <div class="info-row"><span>Local API</span><span>localhost:3002</span></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>CloudBench · Cloud performance benchmarking project</footer>
+
+  <script>
+    const API = "http://localhost:3002";
+    let startRequested = false;
+
+    const byId = (id) => document.getElementById(id);
+
+    function showK6Error(message) {
+      const box = byId("k6Error");
+      box.textContent = message;
+      box.style.display = "block";
+    }
+
+    function clearK6Error() {
+      byId("k6Error").textContent = "";
+      byId("k6Error").style.display = "none";
+    }
+
+    function setApiStatus(ok, text) {
+      byId("apiDot").className = "dot " + (ok ? "online" : "error");
+      byId("apiStatus").textContent = text;
+    }
+
+    async function startTest() {
+      if (startRequested) return;
+      startRequested = true;
+      clearK6Error();
+      byId("startButton").disabled = true;
+      byId("testStatus").textContent = "Starting k6...";
+      byId("testState").textContent = "Starting";
+
+      try {
+        const response = await fetch(`${API}/api/k6/start`, { method: "POST" });
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || "Could not start k6.");
+
+        byId("testStatus").textContent = "Test started";
+        byId("k6Badge").textContent = "Test started";
+        byId("testState").textContent = "Running";
+      
+      } catch (error) {
+        showK6Error("Unable to start the test: " + error.message);
+        byId("testStatus").textContent = "Could not start test";
+        byId("testState").textContent = "Error";
+      } finally {
+        startRequested = false;
+        byId("startButton").disabled = false;
+      }
+    }
+
+    
+
+    async function loadK6Metrics() {
+      try {
+        const response = await fetch(`${API}/api/k6/live`, { cache: "no-store" });
+        if (!response.ok) throw new Error("k6 endpoint returned HTTP " + response.status);
+        const data = await response.json();
+
+        byId("rps").textContent = Number(data.rps || 0).toFixed(2);
+        byId("p95").textContent = data.p95Ms == null ? "—" : Number(data.p95Ms).toFixed(1);
+        byId("failureRate").textContent = (Number(data.failureRate || 0) * 100).toFixed(2);
+        byId("vus").textContent = data.vus ?? 0;
+        byId("requests").textContent = data.requests ?? 0;
+        byId("k6Updated").textContent = new Date().toLocaleTimeString();
+
+        if (data.running) {
+          byId("testState").textContent = "Running";
+          byId("k6Badge").textContent = "Running";
+          byId("testStatus").textContent = "k6 test is running";
+          byId("startButton").disabled = true;
+        } else {
+          byId("startButton").disabled = false;
+
+          if (byId("testState").textContent === "Running" ||
+              byId("testState").textContent === "Starting") {
+            byId("testState").textContent = "Finished";
+            byId("k6Badge").textContent = "Finished";
+            byId("testStatus").textContent = "Test finished";
+          } else if (byId("testState").textContent === "Idle") {
+            byId("k6Badge").textContent = "Waiting for test";
+          }
+        }
+
+        setApiStatus(true, "Local API connected");
+      } catch (error) {
+        setApiStatus(false, "Local API unavailable");
+        byId("testStatus").textContent = "Start the local server on port 3002";
+      }
+    }
+
+    async function loadAwsMetrics() {
+      try {
+        const response = await fetch(`${API}/api/metrics/aws`, { cache: "no-store" });
+        if (!response.ok) throw new Error("AWS endpoint returned HTTP " + response.status);
+        const data = await response.json();
+
+        byId("cpu").textContent =
+          data.cpuUtilizationPercent == null
+            ? "—"
+            : Number(data.cpuUtilizationPercent).toFixed(2);
+
+        byId("instances").textContent = data.instanceCount ?? "—";
+        byId("desired").textContent = data.desiredCapacity ?? "—";
+        byId("capacityNote").textContent =
+          `Minimum: ${data.minSize ?? "—"} · Maximum: ${data.maxSize ?? "—"}`;
+
+        byId("cpuNote").textContent = data.cpuMetricTimestamp
+          ? "CloudWatch sample: " + new Date(data.cpuMetricTimestamp).toLocaleTimeString()
+          : "No recent CPU datapoint available";
+
+        byId("awsUpdated").textContent = new Date().toLocaleTimeString();
+      } catch (error) {
+        byId("cpuNote").textContent = "Could not load AWS metrics";
+        console.error("AWS metrics error:", error);
+      }
+    }
+
+    loadK6Metrics();
+    loadAwsMetrics();
+    setInterval(loadK6Metrics, 1500);
+    setInterval(loadAwsMetrics, 1500);
+  </script>
+</body>
+</html>
