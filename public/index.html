@@ -298,6 +298,38 @@
         grid-template-columns: 1fr;
       }
     }
+    
+.comparison-row {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.comparison-bar-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e5e7eb;
+}
+
+.comparison-bar {
+  height: 100%;
+  width: 0;
+  background: #f59e0b;
+  border-radius: 8px;
+  transition: width 0.4s ease;
+}
+
+.comparison-bar.azure {
+  background: #2563eb;
+}
+
+#winnerRps,
+#winnerP95,
+#winnerFailure {
+  font-weight: 600;
+}
+
   </style>
 </head>
 
@@ -409,34 +441,34 @@
         </div>
 
 
-        <div class="test-controls">
+        
+<div class="test-controls">
 
-          <button
-            class="primary"
-            id="awsButton"
-            onclick="startTest('aws')"
-          >
-            Run AWS Test
-          </button>
+  <button
+    class="primary"
+    id="comparisonButton"
+    onclick="startComparison()"
+  >
+    Run AWS + Azure Comparison
+  </button>
 
+  <button
+    class="azure-button"
+    id="stopButton"
+    onclick="stopTest()"
+    disabled
+  >
+    Stop Tests
+  </button>
 
-          <button
-            class="azure-button"
-            id="azureButton"
-            onclick="startTest('azure')"
-          >
-            Run Azure Test
-          </button>
+  <span
+    class="test-status"
+    id="testStatus"
+  >
+    Ready to compare
+  </span>
 
-
-          <span
-            class="test-status"
-            id="testStatus"
-          >
-            No test running
-          </span>
-
-        </div>
+</div>
 
 
         <div class="target-display">
@@ -465,134 +497,148 @@
       <!-- K6 METRICS -->
       <!-- ================================================== -->
 
-      <div class="grid">
+ 
+<div class="comparison-metrics-grid">
 
-        <div class="card">
+  <!-- AWS LIVE METRICS -->
+  <section class="card">
+    <h3>AWS — Live Metrics</h3>
+    <div class="grid">
 
-          <div class="metric-label">
-            Requests per second
-          </div>
-
-          <div class="metric-value">
-            <span id="rps">—</span>
-          </div>
-
-          <div class="metric-note">
-            k6 requests/s
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="metric-label">
-            p95 response time
-          </div>
-
-          <div class="metric-value">
-
-            <span id="p95">—</span>
-
-            <span class="metric-unit">
-              ms
-            </span>
-
-          </div>
-
-          <div class="metric-note">
-            95th percentile of request durations
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="metric-label">
-            Failed requests
-          </div>
-
-          <div class="metric-value">
-
-            <span id="failureRate">—</span>
-
-            <span class="metric-unit">
-              %
-            </span>
-
-          </div>
-
-          <div class="metric-note">
-            k6 request failure rate
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="metric-label">
-            Virtual users
-          </div>
-
-          <div
-            class="metric-value"
-            id="vus"
-          >
-            —
-          </div>
-
-          <div class="metric-note">
-            Currently active k6 virtual users
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="metric-label">
-            Total requests
-          </div>
-
-          <div
-            class="metric-value"
-            id="requests"
-          >
-            —
-          </div>
-
-          <div class="metric-note">
-            Requests observed in the current k6 run
-          </div>
-
-        </div>
-
-
-        <div class="card">
-
-          <div class="metric-label">
-            Test status
-          </div>
-
-          <div
-            class="metric-value"
-            style="font-size:25px"
-            id="testState"
-          >
-            Idle
-          </div>
-
-          <div class="metric-note">
-            Refreshes automatically while the dashboard is open
-          </div>
-
-        </div>
-
+      <div class="card">
+        <div class="metric-label">Requests per second</div>
+        <div class="metric-value" id="awsRps">—</div>
+        <div class="metric-note">k6 requests/s</div>
       </div>
 
-    </section>
+      <div class="card">
+        <div class="metric-label">p95 response time</div>
+        <div class="metric-value"><span id="awsP95">—</span> <span class="metric-unit">ms</span></div>
+        <div class="metric-note">95th percentile latency</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Failed requests</div>
+        <div class="metric-value"><span id="awsFailureRate">—</span><span class="metric-unit">%</span></div>
+        <div class="metric-note">k6 request failure rate</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Virtual users</div>
+        <div class="metric-value" id="awsVus">—</div>
+        <div class="metric-note">Active virtual users</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Total requests</div>
+        <div class="metric-value" id="awsRequests">—</div>
+        <div class="metric-note">Requests in this run</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Test status</div>
+        <div class="metric-value" id="awsTestState">Idle</div>
+        <div class="metric-note">AWS k6 test</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- AZURE LIVE METRICS -->
+  <section class="card">
+    <h3>Azure — Live Metrics</h3>
+    <div class="grid">
+
+      <div class="card">
+        <div class="metric-label">Requests per second</div>
+        <div class="metric-value" id="azureRps">—</div>
+        <div class="metric-note">k6 requests/s</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">p95 response time</div>
+        <div class="metric-value"><span id="azureP95">—</span> <span class="metric-unit">ms</span></div>
+        <div class="metric-note">95th percentile latency</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Failed requests</div>
+        <div class="metric-value"><span id="azureFailureRate">—</span><span class="metric-unit">%</span></div>
+        <div class="metric-note">k6 request failure rate</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Virtual users</div>
+        <div class="metric-value" id="azureVus">—</div>
+        <div class="metric-note">Active virtual users</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Total requests</div>
+        <div class="metric-value" id="azureRequests">—</div>
+        <div class="metric-note">Requests in this run</div>
+      </div>
+
+      <div class="card">
+        <div class="metric-label">Test status</div>
+        <div class="metric-value" id="azureTestState">Idle</div>
+        <div class="metric-note">Azure k6 test</div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</section>
+
+
+<section class="card" id="comparisonResults">
+  <h2>Final Performance Comparison</h2>
+  <p id="comparisonSummary">
+    Run both cloud tests to see the final comparison.
+  </p>
+
+  <div id="comparisonChart">
+    <div class="comparison-row">
+      <div class="metric-label">Requests per second (higher is better)</div>
+      <div>AWS: <strong id="finalAwsRps">—</strong></div>
+      <div class="comparison-bar-track">
+        <div class="comparison-bar" id="barAwsRps" style="width:0%"></div>
+      </div>
+      <div>Azure: <strong id="finalAzureRps">—</strong></div>
+      <div class="comparison-bar-track">
+        <div class="comparison-bar azure" id="barAzureRps" style="width:0%"></div>
+      </div>
+      <div id="winnerRps">Winner: —</div>
+    </div>
+
+    <div class="comparison-row">
+      <div class="metric-label">p95 latency (lower is better)</div>
+      <div>AWS: <strong id="finalAwsP95">—</strong> ms</div>
+      <div class="comparison-bar-track">
+        <div class="comparison-bar" id="barAwsP95" style="width:0%"></div>
+      </div>
+      <div>Azure: <strong id="finalAzureP95">—</strong> ms</div>
+      <div class="comparison-bar-track">
+        <div class="comparison-bar azure" id="barAzureP95" style="width:0%"></div>
+      </div>
+      <div id="winnerP95">Winner: —</div>
+    </div>
+
+    <div class="comparison-row">
+      <div class="metric-label">Failure rate (lower is better)</div>
+      <div>AWS: <strong id="finalAwsFailure">—</strong>%</div>
+      <div class="comparison-bar-track">
+        <div class="comparison-bar" id="barAwsFailure" style="width:0%"></div>
+      </div>
+      <div>Azure: <strong id="finalAzureFailure">—</strong>%</div>
+      <div class="comparison-bar-track">
+        <div class="comparison-bar azure" id="barAzureFailure" style="width:0%"></div>
+      </div>
+      <div id="winnerFailure">Winner: —</div>
+    </div>
+  </div>
+</section>
 
 
     <!-- ==================================================== -->
@@ -1062,307 +1108,282 @@
     }
 
 
-    function setButtonsDisabled(
-      disabled
-    ) {
+    
+function setButtonsDisabled(disabled) {
+  const startButton = byId("comparisonButton");
+  const stopButton = byId("stopButton");
 
-      byId("awsButton").disabled =
-        disabled;
+  if (startButton) startButton.disabled = disabled;
+  if (stopButton) stopButton.disabled = !disabled;
+}
 
-      byId("azureButton").disabled =
-        disabled;
+// Start both cloud tests together.
+async function startComparison() {
+  if (startRequested) return;
+
+  startRequested = true;
+  clearK6Error();
+
+  byId("comparisonButton").disabled = true;
+  byId("stopButton").disabled = false;
+  byId("testStatus").textContent =
+    "Starting AWS and Azure tests...";
+
+  for (const target of ["aws", "azure"]) {
+    byId(`${target}TestState`).textContent = "Starting";
+  }
+
+  try {
+    const response = await fetch(`${API}/api/k6/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Could not start comparison.");
     }
 
+    byId("testStatus").textContent =
+      "AWS and Azure tests are running";
+    byId("k6Badge").textContent = "Comparison running";
+  } catch (error) {
+    showK6Error("Unable to start comparison: " + error.message);
+    byId("testStatus").textContent = "Could not start comparison";
+    setButtonsDisabled(false);
 
-    // ========================================================
-    // START K6
-    // ========================================================
+    for (const target of ["aws", "azure"]) {
+      byId(`${target}TestState`).textContent = "Error";
+    }
+  } finally {
+    startRequested = false;
+  }
+}
 
-    async function startTest(
-      target
-    ) {
+// Stop both tests.
+async function stopTest() {
+  try {
+    const response = await fetch(`${API}/api/k6/stop`, {
+      method: "POST",
+    });
 
-      if (startRequested) {
-        return;
-      }
+    const data = await response.json();
 
+    if (!response.ok) {
+      throw new Error(data.error || "Could not stop tests.");
+    }
 
-      startRequested =
-        true;
+    byId("testStatus").textContent = data.message;
+  } catch (error) {
+    showK6Error("Unable to stop tests: " + error.message);
+  }
+}
 
+// Update one provider's metric panel.
+function updateProviderMetrics(target, data) {
+  const prefix = target === "aws" ? "aws" : "azure";
 
-      clearK6Error();
+  byId(`${prefix}Rps`).textContent =
+    data.rps == null ? "—" : Number(data.rps).toFixed(2);
 
-      setTargetDisplay(
-        target
-      );
+  byId(`${prefix}P95`).textContent =
+    data.p95Ms == null ? "—" : Number(data.p95Ms).toFixed(1);
 
+  byId(`${prefix}FailureRate`).textContent =
+    data.failureRate == null
+      ? "—"
+      : (Number(data.failureRate) * 100).toFixed(2);
 
-      setButtonsDisabled(
-        true
-      );
+  byId(`${prefix}Vus`).textContent = data.vus ?? "—";
+  byId(`${prefix}Requests`).textContent = data.requests ?? "—";
 
+  byId(`${prefix}TestState`).textContent =
+    data.running ? "Running" :
+    data.startedAt ? "Finished" : "Idle";
+}
 
-      byId("testStatus").textContent =
-        `Starting ${target.toUpperCase()} k6 test...`;
-
-
-      byId("testState").textContent =
-        "Starting";
-
-
-      byId("k6Badge").textContent =
-        `${target.toUpperCase()} starting`;
-
-
-      try {
-
-        const response =
-          await fetch(
-            `${API}/api/k6/start`,
-            {
-              method:
-                "POST",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body:
-                JSON.stringify({
-                  target:
-                    target,
-                }),
-            }
-          );
-
-
-        const data =
-          await response.json();
-
+// Poll AWS and Azure separately.
+async function loadK6Metrics() {
+  try {
+    const results = await Promise.all(
+      ["aws", "azure"].map(async (target) => {
+        const response = await fetch(
+          `${API}/api/k6/live?target=${target}`,
+          { cache: "no-store" }
+        );
 
         if (!response.ok) {
-
           throw new Error(
-            data.error ||
-            "Could not start k6."
+            `${target.toUpperCase()} metrics returned HTTP ${response.status}`
           );
         }
 
+        return { target, data: await response.json() };
+      })
+    );
 
-        byId("testStatus").textContent =
-          `${target.toUpperCase()} test started`;
-
-
-        byId("k6Badge").textContent =
-          `${target.toUpperCase()} running`;
-
-
-        byId("testState").textContent =
-          "Running";
-
-      } catch (error) {
-
-        showK6Error(
-          "Unable to start the test: " +
-          error.message
-        );
-
-
-        byId("testStatus").textContent =
-          "Could not start test";
-
-
-        byId("testState").textContent =
-          "Error";
-
-
-        setButtonsDisabled(
-          false
-        );
-
-      } finally {
-
-        startRequested =
-          false;
-      }
-
+    for (const { target, data } of results) {
+      updateProviderMetrics(target, data);
     }
+
+    
+const awsResult = results.find((item) => item.target === "aws");
+const azureResult = results.find((item) => item.target === "azure");
+
+if (awsResult && azureResult) {
+  renderComparison(awsResult.data, azureResult.data);
+}
+
+    const anyRunning = results.some(({ data }) => data.running);
+    const anyStarted = results.some(({ data }) => data.startedAt);
+
+    if (anyRunning) {
+      byId("testStatus").textContent =
+        "AWS and Azure comparison running...";
+      byId("k6Badge").textContent = "Comparison running";
+      setButtonsDisabled(true);
+    } else if (anyStarted) {
+      byId("testStatus").textContent =
+        "Both tests have stopped. Review the final results.";
+      byId("k6Badge").textContent = "Comparison finished";
+      setButtonsDisabled(false);
+    } else {
+      byId("testStatus").textContent = "Ready to compare";
+      byId("k6Badge").textContent = "Waiting for tests";
+      setButtonsDisabled(false);
+    }
+
+    if (typeof setApiStatus === "function") {
+      setApiStatus(true, "Local API connected");
+    }
+
+    if (byId("k6Updated")) {
+      byId("k6Updated").textContent =
+        new Date().toLocaleTimeString();
+    }
+  } catch (error) {
+    console.error("k6 metrics error:", error);
+
+    if (typeof setApiStatus === "function") {
+      setApiStatus(false, "Local API unavailable");
+    }
+
+    byId("testStatus").textContent = "Could not load k6 metrics";
+  }
+}
 
 
     // ========================================================
     // K6 METRICS
     // ========================================================
 
-    async function loadK6Metrics() {
+    
+    
+function renderComparison(aws, azure) {
+  // Only compare completed tests that actually started.
+  if (
+    aws.running || azure.running ||
+    !aws.startedAt || !azure.startedAt
+  ) {
+    return;
+  }
 
-      try {
+  const metrics = [
+    {
+      key: "Rps",
+      label: "Requests per second",
+      aws: aws.rps,
+      azure: azure.rps,
+      higherBetter: true,
+      format: (v) => Number(v).toFixed(2),
+    },
+    {
+      key: "P95",
+      label: "p95 latency",
+      aws: aws.p95Ms,
+      azure: azure.p95Ms,
+      higherBetter: false,
+      format: (v) => Number(v).toFixed(1),
+    },
+    {
+      key: "Failure",
+      label: "Failure rate",
+      aws: aws.failureRate == null
+        ? null : Number(aws.failureRate) * 100,
+      azure: azure.failureRate == null
+        ? null : Number(azure.failureRate) * 100,
+      higherBetter: false,
+      format: (v) => Number(v).toFixed(2),
+    },
+  ];
 
-        const response =
-          await fetch(
-            `${API}/api/k6/live`,
-            {
-              cache:
-                "no-store",
-            }
-          );
+  let awsWins = 0;
+  let azureWins = 0;
+  let comparable = 0;
 
+  for (const metric of metrics) {
+    const a = metric.aws == null ? null : Number(metric.aws);
+    const z = metric.azure == null ? null : Number(metric.azure);
 
-        if (!response.ok) {
+    const awsValue = byId(`finalAws${metric.key}`);
+    const azureValue = byId(`finalAzure${metric.key}`);
 
-          throw new Error(
-            "k6 endpoint returned HTTP " +
-            response.status
-          );
-        }
+    if (a == null || z == null ||
+        !Number.isFinite(a) || !Number.isFinite(z)) {
+      awsValue.textContent = "Unavailable";
+      azureValue.textContent = "Unavailable";
+      byId(`winner${metric.key}`).textContent =
+        "Winner: insufficient data";
 
-
-        const data =
-          await response.json();
-
-
-        // ----------------------------------------------------
-        // Metrics
-        // ----------------------------------------------------
-
-        byId("rps").textContent =
-          data.rps == null
-            ? "—"
-            : Number(
-                data.rps
-              ).toFixed(2);
-
-
-        byId("p95").textContent =
-          data.p95Ms == null
-            ? "—"
-            : Number(
-                data.p95Ms
-              ).toFixed(1);
-
-
-        byId("failureRate").textContent =
-          data.failureRate == null
-            ? "—"
-            : (
-                Number(
-                  data.failureRate
-                ) * 100
-              ).toFixed(2);
-
-
-        byId("vus").textContent =
-          data.vus ?? "—";
-
-
-        byId("requests").textContent =
-          data.requests ?? "—";
-
-
-        byId("k6Updated").textContent =
-          new Date().toLocaleTimeString();
-
-
-        // ----------------------------------------------------
-        // Target
-        // ----------------------------------------------------
-
-        if (data.target) {
-
-          setTargetDisplay(
-            data.target
-          );
-        }
-
-
-        // ----------------------------------------------------
-        // Running
-        // ----------------------------------------------------
-
-        if (data.running) {
-
-          byId("testState").textContent =
-            "Running";
-
-
-          byId("k6Badge").textContent =
-            `${(
-              data.target ||
-              "cloud"
-            ).toUpperCase()} running`;
-
-
-          byId("testStatus").textContent =
-            `${(
-              data.target ||
-              "Cloud"
-            ).toUpperCase()} k6 test is running`;
-
-
-          setButtonsDisabled(
-            true
-          );
-
-
-        } else {
-
-          setButtonsDisabled(
-            false
-          );
-
-
-          if (
-            data.target
-          ) {
-
-            byId("testState").textContent =
-              "Finished";
-
-
-            byId("k6Badge").textContent =
-              `${data.target.toUpperCase()} finished`;
-
-
-            byId("testStatus").textContent =
-              `${data.target.toUpperCase()} test finished`;
-
-          } else {
-
-            byId("testState").textContent =
-              "Idle";
-
-
-            byId("k6Badge").textContent =
-              "Waiting for test";
-
-
-            byId("testStatus").textContent =
-              "No test running";
-          }
-        }
-
-
-        setApiStatus(
-          true,
-          "Local API connected"
-        );
-
-
-      } catch (error) {
-
-        setApiStatus(
-          false,
-          "Local API unavailable"
-        );
-
-
-        byId("testStatus").textContent =
-          "Local API unavailable";
-
-      }
-
+      byId(`barAws${metric.key}`).style.width = "0%";
+      byId(`barAzure${metric.key}`).style.width = "0%";
+      continue;
     }
+
+    awsValue.textContent = metric.format(a);
+    azureValue.textContent = metric.format(z);
+
+    const max = Math.max(a, z, 0.000001);
+    byId(`barAws${metric.key}`).style.width =
+      `${Math.max(0, a / max * 100)}%`;
+    byId(`barAzure${metric.key}`).style.width =
+      `${Math.max(0, z / max * 100)}%`;
+
+    const equal = Math.abs(a - z) < 0.000001;
+    let winner;
+
+    if (equal) {
+      winner = "Tie";
+    } else {
+      const awsBetter = metric.higherBetter ? a > z : a < z;
+      winner = awsBetter ? "AWS" : "Azure";
+
+      if (awsBetter) awsWins++;
+      else azureWins++;
+
+      comparable++;
+    }
+
+    byId(`winner${metric.key}`).textContent =
+      `Winner: ${winner}`;
+  }
+
+  const summary = byId("comparisonSummary");
+
+  if (comparable === 0) {
+    summary.textContent =
+      "Tests finished, but there is not enough metric data to determine an overall winner.";
+  } else if (awsWins === azureWins) {
+    summary.textContent =
+      `Metric comparison complete: AWS won ${awsWins} metric(s), Azure won ${azureWins}. No overall winner by metric count.`;
+  } else {
+    const winner = awsWins > azureWins ? "AWS" : "Azure";
+    summary.textContent =
+      `Metric comparison complete: ${winner} won more metrics (${Math.max(awsWins, azureWins)} of ${comparable}). This is a metric-count result, not a universal cloud ranking.`;
+  }
+}
 
 
     // ========================================================

@@ -619,20 +619,25 @@ app.get(
 // K6 STATE
 // ============================================================
 
-let k6Process =
-  null;
-
-let k6Status = {
-  running:
-    false,
-
-  startedAt:
-    null,
-
-  target:
-    null,
-
-  output: [],
+const k6Runs = {
+  aws: {
+    process: null,
+    status: {
+      running: false,
+      startedAt: null,
+      target: 'aws',
+      output: []
+    }
+  },
+  azure: {
+    process: null,
+    status: {
+      running: false,
+      startedAt: null,
+      target: 'azure',
+      output: []
+    }
+  }
 };
 
 // ============================================================
@@ -650,10 +655,10 @@ function cleanK6Output(
     );
 }
 
-function parseK6Metrics() {
+function parseK6Metrics(status)  {
   const text =
     cleanK6Output(
-      k6Status.output
+      status.output
     );
 
   // ------------------------------------
@@ -854,12 +859,12 @@ function parseK6Metrics() {
   if (
     rps === null &&
     requests !== null &&
-    k6Status.startedAt
+    status.startedAt
   ) {
     const elapsed =
       Date.now() -
       new Date(
-        k6Status.startedAt
+        status.startedAt
       ).getTime();
 
     if (
@@ -887,275 +892,178 @@ function parseK6Metrics() {
 // START K6
 // ============================================================
 
-app.post(
-  "/api/k6/start",
-  async (req, res) => {
-    try {
-      if (k6Process) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "A k6 test is already running",
-          });
-      }
 
-      const {
-        target = "aws",
-        script,
-      } =
-        req.body || {};
+app.post("/api/k6/start", async (req, res) => {
+  try {
+    const alreadyRunning = Object.values(k6Runs).some(
+      (run) => run.process !== null
+    );
 
-      const allowedTargets = [
-        "aws",
-        "azure",
-      ];
-
-      if (
-        !allowedTargets.includes(
-          target
-        )
-      ) {
-        return res
-          .status(400)
-          .json({
-            error:
-              "Target must be aws or azure",
-          });
-      }
-
-      const k6Script =
-        script ||
-        path.join(
-          __dirname,
-          "loadtest.js"
-        );
-
-      k6Status = {
-        running:
-          true,
-
-        startedAt:
-          new Date().toISOString(),
-
-        target,
-
-        output: [],
-      };
-
-      k6Process =
-        spawn(
-          "k6",
-          [
-            "run",
-            k6Script,
-          ],
-          {
-            shell:
-              false,
-
-            env: {
-              ...process.env,
-
-              K6_TARGET:
-                target,
-            },
-          }
-        );
-
-      k6Process.stdout.on(
-        "data",
-        (data) => {
-          const text =
-            data.toString();
-
-          k6Status.output.push(
-            text
-          );
-
-          console.log(
-            "[k6]",
-            text
-          );
-        }
-      );
-
-      k6Process.stderr.on(
-        "data",
-        (data) => {
-          const text =
-            data.toString();
-
-          k6Status.output.push(
-            text
-          );
-
-          console.error(
-            "[k6]",
-            text
-          );
-        }
-      );
-
-      k6Process.on(
-        "error",
-        (error) => {
-          console.error(
-            "k6 process error:",
-            error
-          );
-
-          k6Status.output.push(
-            `k6 process error: ${error.message}\n`
-          );
-
-          k6Status.running =
-            false;
-
-          k6Process =
-            null;
-        }
-      );
-
-      k6Process.on(
-        "close",
-        (code) => {
-          console.log(
-            `k6 finished with code ${code}`
-          );
-
-          k6Status.running =
-            false;
-
-          k6Process =
-            null;
-        }
-      );
-
-      res.json({
-        message:
-          "k6 test started",
-
-        target,
-
-        startedAt:
-          k6Status.startedAt,
-      });
-    } catch (error) {
-      console.error(
-        "k6 start error:",
-        error
-      );
-
-      k6Process =
-        null;
-
-      k6Status.running =
-        false;
-
-      res.status(500).json({
-        error:
-          "Unable to start k6",
-
-        details:
-          error.message,
+    if (alreadyRunning) {
+      return res.status(400).json({
+        error: "A k6 comparison is already running",
       });
     }
+
+    const script = path.join(__dirname, "loadtest.js");
+
+    // Reset both test states before starting the comparison.
+    for (const target of ["aws", "azure"]) {
+      k6Runs[target].status = {
+        running: false,
+        startedAt: null,
+        target,
+        output: [],
+      };
+    }
+
+    const startedAt = new Date().toISOString();
+    const startedTargets = [];
+
+    for (const target of ["aws", "azure"]) {
+      const run = k6Runs[target];
+
+      run.status.startedAt = startedAt;
+
+      const child = spawn("k6", ["run", script], {
+        shell: false,
+        env: {
+          ...process.env,
+          K6_TARGET: target,
+        },
+      });
+
+      run.process = child;
+      run.status.running = true;
+      startedTargets.push(target);
+
+      child.stdout.on("data", (data) => {
+        const output = data.toString();
+        run.status.output.push(output);
+        console.log(`[k6:${target}]`, output);
+      });
+
+      child.stderr.on("data", (data) => {
+        const output = data.toString();
+        run.status.output.push(output);
+        console.error(`[k6:${target}]`, output);
+      });
+
+      child.on("error", (error) => {
+        console.error(`k6 ${target} process error:`, error);
+        run.status.output.push(
+          `k6 process error: ${error.message}\n`
+        );
+        run.status.running = false;
+        run.process = null;
+      });
+
+      child.on("close", (code) => {
+        console.log(`k6 ${target} finished with code ${code}`);
+        run.status.running = false;
+        run.status.exitCode = code;
+        run.process = null;
+      });
+    }
+
+    res.json({
+      message: "AWS and Azure k6 tests started",
+      targets: startedTargets,
+      startedAt,
+    });
+  } catch (error) {
+    console.error("k6 comparison start error:", error);
+
+    for (const target of ["aws", "azure"]) {
+      const run = k6Runs[target];
+      if (run.process) {
+        run.process.kill();
+        run.process = null;
+      }
+      run.status.running = false;
+    }
+
+    res.status(500).json({
+      error: "Unable to start k6 comparison",
+      details: error.message,
+    });
   }
-);
+});
 
 // ============================================================
 // K6 LIVE
 // ============================================================
 
-app.get(
-  "/api/k6/live",
-  (req, res) => {
-    const metrics =
-      parseK6Metrics();
 
-    res.json({
-      running:
-        k6Status.running,
+app.get("/api/k6/live", (req, res) => {
+  const target = req.query.target || "aws";
 
-      startedAt:
-        k6Status.startedAt,
-
-      target:
-        k6Status.target,
-
-      rps:
-        metrics.rps,
-
-      p95Ms:
-        metrics.p95Ms,
-
-      avgMs:
-        metrics.avgMs,
-
-      failureRate:
-        metrics.failureRate,
-
-      requests:
-        metrics.requests,
-
-      vus:
-        metrics.vus,
-
-      maxVus:
-        metrics.maxVus,
-
-      output:
-        k6Status.output.slice(
-          -50
-        ),
+  if (!["aws", "azure"].includes(target)) {
+    return res.status(400).json({
+      error: "Target must be aws or azure",
     });
   }
-);
+
+  const run = k6Runs[target];
+  const status = run.status;
+  const metrics = parseK6Metrics(status);
+
+  res.json({
+    running: status.running,
+    startedAt: status.startedAt,
+    target: status.target,
+
+    rps: metrics.rps,
+    p95Ms: metrics.p95Ms,
+    avgMs: metrics.avgMs,
+    failureRate: metrics.failureRate,
+    requests: metrics.requests,
+    vus: metrics.vus,
+    maxVus: metrics.maxVus,
+
+    exitCode: status.exitCode ?? null,
+    output: status.output.slice(-50),
+  });
+});
+
 
 // ============================================================
 // STOP K6
 // ============================================================
 
-app.post(
-  "/api/k6/stop",
-  (req, res) => {
-    try {
-      if (!k6Process) {
-        return res.json({
-          message:
-            "No k6 test is running",
-        });
+
+
+app.post("/api/k6/stop", (req, res) => {
+  try {
+    let stopped = 0;
+
+    for (const target of ["aws", "azure"]) {
+      const run = k6Runs[target];
+
+      if (run.process && !run.process.killed) {
+        const sent = run.process.kill();
+
+        if (sent) {
+          stopped++;
+        }
       }
-
-      k6Process.kill();
-
-      k6Process =
-        null;
-
-      k6Status.running =
-        false;
-
-      res.json({
-        message:
-          "k6 test stopped",
-      });
-    } catch (error) {
-      console.error(
-        "k6 stop error:",
-        error
-      );
-
-      res.status(500).json({
-        error:
-          "Unable to stop k6",
-
-        details:
-          error.message,
-      });
     }
+
+    res.json({
+      message: stopped
+        ? "Stop signal sent to running k6 tests"
+        : "No k6 stop signals were needed",
+      stopped,
+    });
+  } catch (error) {
+    console.error("k6 stop error:", error);
+
+    res.status(500).json({
+      error: "Unable to stop k6 tests",
+      details: error.message,
+    });
   }
-);
+});
 
 // ============================================================
 // SERVER
