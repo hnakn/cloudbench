@@ -60,8 +60,7 @@ const awsAlbDns =
   "cloudbench-alb-1180364049.ap-south-1.elb.amazonaws.com";
 
 const awsAsgName =
-  process.env.AWS_ASG_NAME ||
-  "";
+  process.env.AWS_ASG_NAME || "cloudbench-asg";
 
 const cloudWatchClient =
   new CloudWatchClient({
@@ -259,7 +258,7 @@ app.get(
 
       let desiredCapacity =
         0;
-
+      
       let minSize =
         null;
 
